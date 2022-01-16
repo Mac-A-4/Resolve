@@ -47,21 +47,8 @@ int main(int argc, char** argv) {
     if (!process)
         return -2;
     
-    uintptr_t result;
+    std::cout << (void*)Resolve(process, argv[2]) << std::endl;
 
-    if (Resolve(process, argv[2], result)) {
-
-        std::cout << (void*)result << std::endl;
-
-        return 0;
-
-    }
-    else {
-
-        std::cout << "Error." << std::endl;
-
-        return -3;
-
-    }
+    return 0;
 
 }
