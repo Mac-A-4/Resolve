@@ -1,0 +1,3 @@
+[submodule "extern/GetProcAddressEx"]
+	path = extern/GetProcAddressEx
+	url = https://github.com/Mac-A-4/GetProcAddressEx.git
