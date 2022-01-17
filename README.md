@@ -4,6 +4,7 @@ An external implementation of an address resolver for Windows. You can resolve a
 
 # Features
 
+- Resolve base addresses of modules
 - Resolve addresses of exports inside modules
 - Apply decimal/hexadecimal offsets
 
@@ -19,13 +20,16 @@ An expression string is made up of an arbitrary number of tokens, separated by e
 
 ## Reference Tokens
 
-A reference token is a token within the expression that references an export in a module in the target process.
+A reference token is a token within the expression that references a base or an export in a module in the target process.
 
 Some examples are:
 
 ```
+<module_name.dll>
 <module_name.dll>:export_name
+<kernel32.dll>
 <kernel32.dll>:HeapAlloc
+<ntdll.dll>
 <ntdll.dll>:LdrLoadDll
 ```
 
@@ -37,7 +41,7 @@ Here's an example:
 
 ```
 <module_name.dll>:export_name + 20
-<kernel32.dll>:HeapAlloc + 45
+<kernel32.dll> + 45
 <ntdll.dll>:LdrLoadDll - 21
 ```
 
@@ -51,6 +55,6 @@ Here's an example:
 
 ```
 <module_name.dll>:export_name + 020
-<kernel32.dll>:HeapAlloc + 0DEADBEEF
+<kernel32.dll> + 0DEADBEEF
 <ntdll.dll>:LdrLoadDll - 020203F
 ```
