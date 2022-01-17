@@ -1,7 +1,44 @@
 #include <Resolve/Resolve.h>
+
 #include <GetProcAddressEx.h>
+
+#include <TlHelp32.h>
+
+#undef MODULEENTRY32
+#undef Module32First
+#undef Module32Next
+
 #include <sstream>
 #include <cctype>
+
+static HMODULE FindModule(HANDLE _Process, const std::string& _Module) {
+
+	HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, GetProcessId(_Process));
+
+	if (snapshot == INVALID_HANDLE_VALUE)
+		return nullptr;
+
+	MODULEENTRY32 entry = { 0 };
+
+	entry.dwSize = sizeof(entry);
+
+	for (BOOL status = Module32First(snapshot, &entry); status == TRUE; status = Module32Next(snapshot, &entry)) {
+
+		if (!_strcmpi(_Module.c_str(), entry.szModule)) {
+
+			CloseHandle(snapshot);
+
+			return entry.hModule;
+
+		}
+
+	}
+
+	CloseHandle(snapshot);
+
+	return nullptr;
+
+}
 
 static void ReadSpace(std::istream& _Input) {
 
@@ -27,22 +64,32 @@ static bool ReadReference(HANDLE _Process, std::istream& _Input, uintptr_t& _Ret
 
     ReadSpace(_Input);
 
-    if (_Input.get() != ':')
-        return false;
+    if (_Input.peek() == ':') {
 
-    ReadSpace(_Input);
+        _Input.get();
 
-    std::string name_buf;
+        ReadSpace(_Input);
 
-    for (char value = _Input.peek(); std::isalnum(value) || value == '_'; _Input.get(), value = _Input.peek()) {
+        std::string name_buf;
 
-        name_buf.push_back(value);
+        for (char value = _Input.peek(); std::isalnum(value) || value == '_'; _Input.get(), value = _Input.peek()) {
+
+            name_buf.push_back(value);
+
+        }
+
+        _Return = reinterpret_cast<uintptr_t>(GetProcAddressEx(_Process, mod_buf.c_str(), name_buf.c_str()));
+
+        return _Return != 0;
 
     }
+    else {
 
-    _Return = reinterpret_cast<uintptr_t>(GetProcAddressEx(_Process, mod_buf.c_str(), name_buf.c_str()));
+        _Return = reinterpret_cast<uintptr_t>(FindModule(_Process, mod_buf));
 
-    return _Return != 0;
+        return _Return != 0;
+
+    }
 
 }
 
